@@ -12,7 +12,7 @@ import com.intellij.psi.xml.XmlTag;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class XmlMapping  {
+public class XmlMapping {
 
     public List<XmlTag> getAllXmlTagList(Project project) {
         return findAllXmlFiles(project).stream()
