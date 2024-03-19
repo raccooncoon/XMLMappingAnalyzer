@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class MainActionEvent extends AnAction {
 
@@ -33,7 +34,9 @@ public class MainActionEvent extends AnAction {
         deleteFilesInDirectory(getXmlSavePath());
 
         Project project = anActionEvent.getProject();
+
         if (project != null) {
+
             List<XmlTag> xmlTagList = xmlMapping.getAllXmlTagList(project);
             System.out.println("xmlTagList.size() = " + xmlTagList.size());
 
@@ -43,12 +46,11 @@ public class MainActionEvent extends AnAction {
                 String namespace = ((XmlTagImpl) xmlTag.getParent()).getAttributeValue("namespace");
                 String fileName = xmlTag.getContainingFile().getName();
                 //String filePath = xmlTag.getContainingFile().getVirtualFile().getPath();
-                String context = xmlTag.getText().replaceAll("\"", "");// 구분자 처리 하기 , " -> ""
+                String context = xmlTag.getText().replaceAll("\"", "");
                 String moduleName = ModuleUtilCore.findModuleForPsiElement(xmlTag).getName();
 
                 // 저장 하기 (xml list table)
-                saveCsvFile(Arrays.asList(id, subtag, namespace, fileName, moduleName), "./xml_list.csv");
-
+                saveCsvFile(Arrays.asList(moduleName, id, subtag, namespace, fileName, context), "./xml_list.csv");
 
                 PsiClass psiClass = JavaPsiFacade.getInstance(project)
                         .findClass(Objects.requireNonNull(namespace), GlobalSearchScope.allScope(project));
@@ -61,18 +63,17 @@ public class MainActionEvent extends AnAction {
                                 String methodName = method.getName();
                                 String url = findMethodCaller.extractUrl(method);
 
-                                System.out.println("moduleName = " + moduleName);
-                                System.out.println("id = " + id);
-                                System.out.println("namespace = " + namespace);
-                                System.out.println("fileName = " + fileName);
-                                System.out.println("url = " + url);
-                                System.out.println("className = " + className);
-                                System.out.println("methodName = " + methodName);
+//                                System.out.println("moduleName = " + moduleName);
+//                                System.out.println("id = " + id);
+//                                System.out.println("namespace = " + namespace);
+//                                System.out.println("fileName = " + fileName);
+//                                System.out.println("url = " + url);
+//                                System.out.println("className = " + className);
+//                                System.out.println("methodName = " + methodName);
 
                                 // 저장 하기 (method list table)
                                 // id, namespace, fileName
-                                saveCsvFile(Arrays.asList(id, namespace, fileName, moduleName, className, methodName, url), "./method_list.csv");
-
+                                saveCsvFile(Arrays.asList(moduleName, id, namespace, className, methodName, url), "./method_list.csv");
                             });
                 }
             });
@@ -81,7 +82,13 @@ public class MainActionEvent extends AnAction {
 
     public void saveCsvFile(List<String> items, String saveFileName) {
         try (FileWriter writer = new FileWriter(generateSavePath(saveFileName), true)) {
-            writer.append(String.join(",", items));
+
+            // Using String.format with a list
+            String result = String.format(items.stream()
+                    .map(item -> "\"%s\"")
+                    .collect(Collectors.joining(",")), items.toArray());
+
+            writer.append(result);
             writer.append('\n');
         } catch (IOException e) {
             e.printStackTrace();
