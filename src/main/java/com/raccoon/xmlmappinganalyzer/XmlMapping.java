@@ -18,7 +18,7 @@ public class XmlMapping {
         return findAllXmlFiles(project).stream()
                 .filter(xmlFile -> Objects.requireNonNull(xmlFile.getRootTag()).getName().equals("mapper"))
                 .flatMap(xmlFile -> Objects.requireNonNull(Arrays.stream(xmlFile.getRootTag().getSubTags())))
-                .filter(xmlTag -> List.of("insert", "update", "delete","select").contains(xmlTag.getName()))
+                .filter(xmlTag -> List.of("delete","select","insert", "update").contains(xmlTag.getName()))
                 .collect(Collectors.toList());
 
             /*PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);

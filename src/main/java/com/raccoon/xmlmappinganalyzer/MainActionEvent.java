@@ -1,5 +1,8 @@
 package com.raccoon.xmlmappinganalyzer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -15,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -40,43 +44,76 @@ public class MainActionEvent extends AnAction {
             List<XmlTag> xmlTagList = xmlMapping.getAllXmlTagList(project);
             System.out.println("xmlTagList.size() = " + xmlTagList.size());
 
-            xmlTagList.forEach(xmlTag -> {
+            List<ReturnDTO> returnDTOS = xmlTagList.stream().map(xmlTag -> {
                 String id = xmlTag.getAttributeValue("id");
                 String subtag = xmlTag.getName();
                 String namespace = ((XmlTagImpl) xmlTag.getParent()).getAttributeValue("namespace");
                 String fileName = xmlTag.getContainingFile().getName();
-                //String filePath = xmlTag.getContainingFile().getVirtualFile().getPath();
+                String filePath = xmlTag.getContainingFile().getVirtualFile().getPath();
                 String context = xmlTag.getText().replaceAll("\"", "");
                 String moduleName = ModuleUtilCore.findModuleForPsiElement(xmlTag).getName();
 
+                System.out.println("id = " + id);
+
                 // 저장 하기 (xml list table)
-                saveCsvFile(Arrays.asList(moduleName, id, subtag, namespace, fileName, context), "./xml_list.csv");
+                // saveCsvFile(Arrays.asList(moduleName, id, subtag, namespace, fileName, context), "./xml_list.csv");
+
+                ReturnDTO.ReturnDTOBuilder returnDTOBuilder = ReturnDTO.builder()
+                        .moduleName(moduleName)
+                        .id(id)
+                        .subtag(subtag)
+                        .namespace(namespace)
+                        .fileName(fileName)
+                        .filePath(filePath)
+                        .context(context);
 
                 PsiClass psiClass = JavaPsiFacade.getInstance(project)
                         .findClass(Objects.requireNonNull(namespace), GlobalSearchScope.allScope(project));
 
                 if (psiClass != null) {
-                    Arrays.stream(psiClass.findMethodsByName(id, true))
+                    List<ReturnDTO.TopCaller> collect = Arrays.stream(psiClass.findMethodsByName(id, true))
                             .flatMap((PsiMethod method) -> findMethodCaller.findTopCallingMethods(method).stream())
-                            .forEach(method -> {
+                            .map(method -> {
                                 String className = method.getContainingClass().getName();
                                 String methodName = method.getName();
                                 String url = findMethodCaller.extractUrl(method);
-
-//                                System.out.println("moduleName = " + moduleName);
-//                                System.out.println("id = " + id);
-//                                System.out.println("namespace = " + namespace);
-//                                System.out.println("fileName = " + fileName);
-//                                System.out.println("url = " + url);
-//                                System.out.println("className = " + className);
-//                                System.out.println("methodName = " + methodName);
-
-                                // 저장 하기 (method list table)
-                                // id, namespace, fileName
-                                saveCsvFile(Arrays.asList(moduleName, id, namespace, className, methodName, url), "./method_list.csv");
-                            });
+                                return ReturnDTO.TopCaller.builder()
+                                        .filePath(method.getContainingFile().getVirtualFile().getPath())
+                                        .methodName(className + "." + methodName)
+                                        .url(url)
+                                        .build();
+                            }).collect(Collectors.toList());
+                    returnDTOBuilder.topCallingMethods(collect);
                 }
-            });
+
+                return returnDTOBuilder.build();
+
+            }).collect(Collectors.toList());
+
+            saveJsonfile(returnDTOS);
+
+        }
+    }
+
+    private void saveJsonfile(List<ReturnDTO> returnDTOS) {
+        // ObjectMapper 초기화
+        ObjectMapper objectMapper = JsonMapper.builder()
+                .configure(SerializationFeature.INDENT_OUTPUT, true)
+                .build();
+
+        // JSON 파일 경로 설정
+        String jsonFilePath = generateSavePath("xml_list.json");
+
+        try {
+            // returnDTOS를 JSON 문자열로 변환
+            String jsonContent = objectMapper.writeValueAsString(returnDTOS);
+
+            // JSON 파일로 저장
+            Files.write(Paths.get(jsonFilePath), jsonContent.getBytes());
+
+            System.out.println("ReturnDTO objects have been saved to " + jsonFilePath);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
