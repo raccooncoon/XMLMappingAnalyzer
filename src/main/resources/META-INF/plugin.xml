@@ -30,7 +30,7 @@
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
     <actions>
-        <action id="xmlMapping" class="com.raccoon.xmlmappinganalyzer.XmlMapping"
+        <action id="xmlMapping" class="com.raccoon.xmlmappinganalyzer.MainActionEvent"
                 text="Mybatis Xml 파일 맵핑 저장 ">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
