@@ -16,23 +16,23 @@ import java.util.List;
 public class ReturnDTO {
 
     private String moduleName;
-    private String id;
-    private String subtag;
+    private String xmlid;
     private String namespace;
+    private String subtag;
     private String fileName;
-    private String filePath;
+//    private String filePath;
     private String context;
-    @JsonInclude(JsonInclude.Include.NON_NULL) // null이 아닌 경우에만 직렬화
-    private List<TopCaller> topCallingMethods = new ArrayList<>(); // 빈 리스트로 초기화
-
+    @JsonInclude(JsonInclude.Include.NON_NULL) // null이 아닌 경 우에만 직렬화
+    private List<MethodModels> methodModels = new ArrayList<>(); // 빈 리스트로 초기화
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class TopCaller {
-        private String filePath;
+    public static class MethodModels {
+        private String className;
         private String methodName;
+//        private String filePath;
         private String url;
     }
 }

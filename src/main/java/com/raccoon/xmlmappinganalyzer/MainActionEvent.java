@@ -1,5 +1,6 @@
 package com.raccoon.xmlmappinganalyzer;
 
+import com.esotericsoftware.minlog.Log;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -13,10 +14,10 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.impl.source.xml.XmlTagImpl;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.xml.XmlTag;
+import groovy.util.logging.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class MainActionEvent extends AnAction {
 
     @Override
@@ -35,14 +37,14 @@ public class MainActionEvent extends AnAction {
         FindMethodCaller findMethodCaller = new FindMethodCaller();
 
         // 실행 전 기존 파일 삭제
-        deleteFilesInDirectory(getXmlSavePath());
+        deleteFilesInDirectory();
 
         Project project = anActionEvent.getProject();
 
         if (project != null) {
 
             List<XmlTag> xmlTagList = xmlMapping.getAllXmlTagList(project);
-            System.out.println("xmlTagList.size() = " + xmlTagList.size());
+            Log.info("xmlTagList size : " + xmlTagList.size());
 
             List<ReturnDTO> returnDTOS = xmlTagList.stream().map(xmlTag -> {
                 String id = xmlTag.getAttributeValue("id");
@@ -53,42 +55,38 @@ public class MainActionEvent extends AnAction {
                 String context = xmlTag.getText().replaceAll("\"", "");
                 String moduleName = ModuleUtilCore.findModuleForPsiElement(xmlTag).getName();
 
-                System.out.println("id = " + id);
-
-                // 저장 하기 (xml list table)
-                // saveCsvFile(Arrays.asList(moduleName, id, subtag, namespace, fileName, context), "./xml_list.csv");
-
                 ReturnDTO.ReturnDTOBuilder returnDTOBuilder = ReturnDTO.builder()
                         .moduleName(moduleName)
-                        .id(id)
+                        .xmlid(id)
                         .subtag(subtag)
                         .namespace(namespace)
                         .fileName(fileName)
-                        .filePath(filePath)
                         .context(context);
 
                 PsiClass psiClass = JavaPsiFacade.getInstance(project)
                         .findClass(Objects.requireNonNull(namespace), GlobalSearchScope.allScope(project));
 
                 if (psiClass != null) {
-                    List<ReturnDTO.TopCaller> collect = Arrays.stream(psiClass.findMethodsByName(id, true))
+                    List<ReturnDTO.MethodModels> collect = Arrays.stream(psiClass.findMethodsByName(id, true))
                             .flatMap((PsiMethod method) -> findMethodCaller.findTopCallingMethods(method).stream())
                             .map(method -> {
                                 String className = method.getContainingClass().getName();
                                 String methodName = method.getName();
                                 String url = findMethodCaller.extractUrl(method);
-                                return ReturnDTO.TopCaller.builder()
-                                        .filePath(method.getContainingFile().getVirtualFile().getPath())
-                                        .methodName(className + "." + methodName)
+                                return ReturnDTO.MethodModels.builder()
+                                        .className(className)
+                                        .methodName(methodName)
                                         .url(url)
                                         .build();
                             }).collect(Collectors.toList());
-                    returnDTOBuilder.topCallingMethods(collect);
+                    returnDTOBuilder.methodModels(collect);
                 }
 
                 return returnDTOBuilder.build();
 
             }).collect(Collectors.toList());
+
+            Log.info("returnDTOS : " + returnDTOS.size());
 
             saveJsonfile(returnDTOS);
 
@@ -116,22 +114,6 @@ public class MainActionEvent extends AnAction {
             e.printStackTrace();
         }
     }
-
-    public void saveCsvFile(List<String> items, String saveFileName) {
-        try (FileWriter writer = new FileWriter(generateSavePath(saveFileName), true)) {
-
-            // Using String.format with a list
-            String result = String.format(items.stream()
-                    .map(item -> "\"%s\"")
-                    .collect(Collectors.joining(",")), items.toArray());
-
-            writer.append(result);
-            writer.append('\n');
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public String generateSavePath(String saveName) {
         Path directoryPath = getXmlSavePath();
         java.io.File directory = directoryPath.toFile();
@@ -141,14 +123,8 @@ public class MainActionEvent extends AnAction {
         }
         return directoryPath.resolve(saveName).toString();
     }
-
-    @NotNull
-    public Path getXmlSavePath() {
-        return Paths.get(System.getProperty("user.home"), "csv-table-save");
-    }
-
-    public void deleteFilesInDirectory(Path directoryPath) {
-        File directory = new File(directoryPath.toString());
+    public void deleteFilesInDirectory() {
+        File directory = new File(getXmlSavePath().toString());
         if (directory.exists() && directory.isDirectory()) {
             File[] files = directory.listFiles(); // 디렉토리 내의 모든 파일을 가져옵니다.
             if (files != null) {
@@ -157,5 +133,10 @@ public class MainActionEvent extends AnAction {
                 }
             }
         }
+    }
+
+    @NotNull
+    public Path getXmlSavePath() {
+        return Paths.get(System.getProperty("user.home"), "csv-table-save");
     }
 }
