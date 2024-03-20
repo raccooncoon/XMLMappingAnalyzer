@@ -79,7 +79,9 @@ public class MainActionEvent extends AnAction {
                                         .url(url)
                                         .build();
                             }).collect(Collectors.toList());
-                    returnDTOBuilder.methodModels(collect);
+                    returnDTOBuilder
+                            .urlCount(collect.size())
+                            .methodModels(collect);
                 }
 
                 return returnDTOBuilder.build();

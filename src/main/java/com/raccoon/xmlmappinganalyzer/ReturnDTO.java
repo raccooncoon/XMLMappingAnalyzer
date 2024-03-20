@@ -24,6 +24,7 @@ public class ReturnDTO {
     private String context;
     @JsonInclude(JsonInclude.Include.NON_NULL) // null이 아닌 경 우에만 직렬화
     private List<MethodModels> methodModels = new ArrayList<>(); // 빈 리스트로 초기화
+    private Number urlCount;
 
     @Data
     @Builder
