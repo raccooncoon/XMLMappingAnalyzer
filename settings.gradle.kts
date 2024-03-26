@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "XMLMappingAnalyzer"
+rootProject.name = "ddat-XmlMappingAnalyzer"

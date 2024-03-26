@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -102,7 +104,7 @@ public class MainActionEvent extends AnAction {
                 .build();
 
         // JSON 파일 경로 설정
-        String jsonFilePath = generateSavePath("xml_list.json");
+        String jsonFilePath = generateSavePath( returnDTOS.size() + "-xml_list-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE) + ".json");
 
         try {
             // returnDTOS를 JSON 문자열로 변환
