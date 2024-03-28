@@ -92,7 +92,7 @@ public class MainActionEvent extends AnAction {
 
             Log.info("returnDTOS : " + returnDTOS.size());
 
-            saveJsonfile(returnDTOS, project.getName() );
+            saveJsonfile(returnDTOS, Objects.requireNonNull(new File(Objects.requireNonNull(project.getBasePath())).getName()));
 
         }
     }
