@@ -39,7 +39,7 @@ public class MainActionEvent extends AnAction {
         FindMethodCaller findMethodCaller = new FindMethodCaller();
 
         // 실행 전 기존 파일 삭제
-        deleteFilesInDirectory();
+        // deleteFilesInDirectory();
 
         Project project = anActionEvent.getProject();
 
@@ -92,19 +92,19 @@ public class MainActionEvent extends AnAction {
 
             Log.info("returnDTOS : " + returnDTOS.size());
 
-            saveJsonfile(returnDTOS);
+            saveJsonfile(returnDTOS, project.getName() );
 
         }
     }
 
-    private void saveJsonfile(List<ReturnDTO> returnDTOS) {
+    private void saveJsonfile(List<ReturnDTO> returnDTOS, String projectName) {
         // ObjectMapper 초기화
         ObjectMapper objectMapper = JsonMapper.builder()
                 .configure(SerializationFeature.INDENT_OUTPUT, true)
                 .build();
 
         // JSON 파일 경로 설정
-        String jsonFilePath = generateSavePath( returnDTOS.size() + "-xml_list-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE) + ".json");
+        String jsonFilePath = generateSavePath( projectName + "-" + returnDTOS.size() + "-xml_list-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE) + ".json");
 
         try {
             // returnDTOS를 JSON 문자열로 변환
