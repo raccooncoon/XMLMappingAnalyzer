@@ -30,7 +30,7 @@
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
     <actions>
-        <action id="xmlMapping" class="com.raccoon.xmlmappinganalyzer.MainActionEvent"
+        <action id="xmlmappinganalyzer" class="com.raccoon.xmlmappinganalyzer.MainActionEvent"
                 text="최초 호출 클래스(url) 추출">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
