@@ -1,6 +1,5 @@
 package com.raccoon.xmlmappinganalyzer;
 
-import com.esotericsoftware.minlog.Log;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -8,6 +7,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
@@ -46,7 +46,11 @@ public class MainActionEvent extends AnAction {
         if (project != null) {
 
             List<XmlTag> xmlTagList = xmlMapping.getAllXmlTagList(project);
-            Log.info("xmlTagList size : " + xmlTagList.size());
+            int noDialog = Messages.showYesNoDialog("XML 파일 내 검색 된 Tag 수 : " + xmlTagList.size(), "저장 하시 겠습니까?", Messages.getQuestionIcon());
+
+            if (noDialog == Messages.NO) {
+                return;
+            }
 
             List<ReturnDTO> returnDTOS = xmlTagList.stream().map(xmlTag -> {
                 String id = xmlTag.getAttributeValue("id");
@@ -90,14 +94,18 @@ public class MainActionEvent extends AnAction {
 
             }).collect(Collectors.toList());
 
-            Log.info("returnDTOS : " + returnDTOS.size());
+//            Log.info("returnDTOS : " + returnDTOS.size());
 
-            saveJsonfile(returnDTOS, Objects.requireNonNull(new File(Objects.requireNonNull(project.getBasePath())).getName()));
+            String jsonFilePath = saveJsonfile(returnDTOS, Objects.requireNonNull(new File(Objects.requireNonNull(project.getBasePath())).getName()));
 
+            Messages.showInfoMessage("ReturnDTO objects have been saved to " + jsonFilePath, "Save Success");
+
+        } else {
+            Messages.showInfoMessage("프로젝트가 없습니다.", "Error");
         }
     }
 
-    private void saveJsonfile(List<ReturnDTO> returnDTOS, String projectName) {
+    private String saveJsonfile(List<ReturnDTO> returnDTOS, String projectName) {
         // ObjectMapper 초기화
         ObjectMapper objectMapper = JsonMapper.builder()
                 .configure(SerializationFeature.INDENT_OUTPUT, true)
@@ -114,10 +122,13 @@ public class MainActionEvent extends AnAction {
             Files.write(Paths.get(jsonFilePath), jsonContent.getBytes());
 
             System.out.println("ReturnDTO objects have been saved to " + jsonFilePath);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return jsonFilePath;
     }
+
     public String generateSavePath(String saveName) {
         Path directoryPath = getXmlSavePath();
         java.io.File directory = directoryPath.toFile();

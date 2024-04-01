@@ -1,6 +1,7 @@
 package com.raccoon.xmlmappinganalyzer;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -39,6 +40,8 @@ public class XmlMapping {
 
         // 모든 XML 파일을 찾기 위해 프로젝트 내의 모든 XML 파일 이름을 검색
         Collection<VirtualFile> virtualFiles = FilenameIndex.getAllFilesByExt(project, "xml", GlobalSearchScope.allScope(project));
+
+        Messages.showInfoMessage("검색 된 XML 파일 수 : " + virtualFiles.size(), "XML 파일 검색 결과");
 
         PsiManager psiManager = PsiManager.getInstance(project);
 
