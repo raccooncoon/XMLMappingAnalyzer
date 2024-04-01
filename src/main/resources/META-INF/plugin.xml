@@ -15,7 +15,7 @@
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description>
         1. 분석 파일 뽑는 플러그인
-        2. xml 파일을 읽고 -> insert update delete 구분 -> 아이디를 보고 최초 호출 클래서 및 url 을 뽑아내고, -> 테이블 이름이 있는지 넣을까???
+        2. xml 파일을 읽고 -> insert update delete 구분 -> 아이디를 보고 최초 호출 클래서 및 url 을 뽑기
 
     </description>
 
@@ -31,7 +31,7 @@
     </extensions>
     <actions>
         <action id="xmlMapping" class="com.raccoon.xmlmappinganalyzer.MainActionEvent"
-                text="Mybatis Xml 파일 맵핑 저장 ">
+                text="최초 호출 클래스(url) 추출">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
     </actions>
