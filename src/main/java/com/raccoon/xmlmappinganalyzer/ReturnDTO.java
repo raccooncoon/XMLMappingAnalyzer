@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ReturnDTO {
 
+    private String projectName;
     private String moduleName;
     private String xmlid;
     private String namespace;
